@@ -14,6 +14,7 @@ MAIN_DIR="$SCRIPT_DIR"
 SOURCE_DIR="${MAIN_DIR}/onnxruntime"
 BUILD_DIR="${SOURCE_DIR}/build"
 INSTALL_DIR="${BUILD_DIR}/Linux/Release"
+WHEEL_DIR="${INSTALL_DIR}/dist"
 
 # CMake options (see ${SOURCE_DIR}/build.sh --help) (MIGRaphX not included,
 #   not supported yet on my AMD gfx1103)
@@ -53,7 +54,7 @@ echo "Build completed successfully."
 # -----------------------------------------------------------------------------
 # Install under /usr/local
 # -----------------------------------------------------------------------------
-echo "Installing..."
+echo "Installing lib..."
 
 if [ ! -d "$INSTALL_DIR" ]; then
 	echo "Error: Install directory not found at $INSTALL_DIR"
@@ -61,5 +62,9 @@ if [ ! -d "$INSTALL_DIR" ]; then
 fi
 
 cd "${INSTALL_DIR}" && sudo make install
+
+echo "Install wheel..."
+
+pip install "$WHEEL_DIR/onnxruntime-1.25.0-cp314-cp314-linux_x86_64.whl" --force-reinstall
 
 echo "Installed successfully."

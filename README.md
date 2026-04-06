@@ -73,6 +73,12 @@ Gemini suggests
     --compile_no_warning_as_error
 ```
 
+For my tested build script use
+
+```bash
+build_onnxruntime.sh
+```
+
 ## Test
 
 ```bash
@@ -119,8 +125,5 @@ to verify it works.
 ## To update
 ```bash
 cd ~/Workspace/onnxruntime/onnxruntime
-#Next steps not really required, will be done by build script (by default if no --update --build etc. is given)
-git pull --recusrse-submodules
-rm -Rf build
-# build, etc. as above
+# build, etc. as above, the build.sh script does --clean --update --build by default if no flags are given
 ```
