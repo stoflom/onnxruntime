@@ -1,3 +1,4 @@
 /onnxruntime/
 *.txt
 *.out
+gemini-build-log.md
