@@ -12,7 +12,7 @@ To build onnxruntime with AMD ROCm 7.2 on Fedora 43 using AMD supplied rpms. See
    toolbox --help
    ```
 
-## Update System**
+## Update System
 
  ```bash
    sudo dnf -y update
@@ -24,7 +24,7 @@ To build onnxruntime with AMD ROCm 7.2 on Fedora 43 using AMD supplied rpms. See
 
  ```
 
-## Install ROCm Repositories**
+## Install ROCm Repositories
 
    Install ROCm repos as per AMD instructions for RedHat 10.1
 
@@ -33,8 +33,8 @@ To build onnxruntime with AMD ROCm 7.2 on Fedora 43 using AMD supplied rpms. See
    sudo dnf clean all
 ```
 
-## Configure Repositories**
-  
+## Configure Repositories
+
    ```bash
    # Delete amdgpu.repo (cannot load drivers in toolbox)
    rm /etc/yum.repos.d/amdgpu.repo
@@ -42,7 +42,7 @@ To build onnxruntime with AMD ROCm 7.2 on Fedora 43 using AMD supplied rpms. See
    # Edit /etc/yum.rc.d/rocm.repo to delete amdgraphics (ditto)
    ```
 
-## Install ROCm**
+## Install ROCm
 
    ```bash
    sudo dnf clean all
