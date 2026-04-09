@@ -3,5 +3,4 @@
 *.out
 gemini-build-log.md
 gemini-build-toolbox.md
-test-gpu.py
 toolbox-fedora.md
