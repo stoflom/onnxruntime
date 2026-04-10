@@ -25,8 +25,8 @@ CMAKE_OPTIONS=(
 --build_shared_lib
 --enable_lto
 --use_cache
---cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto"
---cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto"
+--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
+--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
 --compile_no_warning_as_error
 --skip_tests
 )
