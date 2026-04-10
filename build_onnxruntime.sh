@@ -47,7 +47,7 @@ fi
 cd "${SOURCE_DIR}"
 
 echo "Running CMake configuration.."
-#./build.sh   "${CMAKE_OPTIONS[@]}"
+./build.sh   "${CMAKE_OPTIONS[@]}"
 
 echo "Build completed successfully."
 
