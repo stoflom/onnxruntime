@@ -19,16 +19,16 @@ WHEEL_DIR="${INSTALL_DIR}/dist"
 # CMake options (see ${SOURCE_DIR}/build.sh --help) (MIGRaphX not included,
 #   not supported yet on my AMD gfx1103)
 CMAKE_OPTIONS=(
---config Release
---build_wheel
---parallel
---build_shared_lib
---enable_lto
---use_cache
---cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
---cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
---compile_no_warning_as_error
---skip_tests
+	--config Release
+	--build_wheel
+	--parallel
+	--build_shared_lib
+	--enable_lto
+	--use_cache
+	--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
+	--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
+	--compile_no_warning_as_error
+	--skip_tests
 )
 
 # -----------------------------------------------------------------------------
@@ -47,7 +47,7 @@ fi
 cd "${SOURCE_DIR}"
 
 echo "Running CMake configuration.."
-./build.sh   "${CMAKE_OPTIONS[@]}"
+#./build.sh   "${CMAKE_OPTIONS[@]}"
 
 echo "Build completed successfully."
 
@@ -65,6 +65,19 @@ cd "${INSTALL_DIR}" && sudo make install
 
 echo "Install wheel..."
 
-pip install "$WHEEL_DIR/onnxruntime-1.25.0-cp314-cp314-linux_x86_64.whl" --force-reinstall
+if [ ! -d "$WHEEL_DIR" ]; then
+	echo "Error: Wheel directory not found at $WHEEL_DIR"
+	exit 1
+fi
+
+WHEEL_FILE=("$WHEEL_DIR"/onnxruntime*.whl)
+WHEEL_FILE="${WHEEL_FILE[0]}"
+
+if [ ! -s "$WHEEL_FILE" ]; then
+	echo "Error: Wheel file not found at $WHEEL_FILE"
+	exit 1
+fi
+
+pip install "$WHEEL_FILE" --force-reinstall
 
 echo "Installed successfully."
