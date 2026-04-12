@@ -15,7 +15,7 @@ toolbox --help
 ```bash
 sudo dnf -y update
 sudo dnf group install "Development Tools"
-sudo dnf install cmake patch
+sudo dnf install cmake patch gmock-devel
 sudo dnf install python3 python3-setuptools python3-wheel
 sudo dnf install python3-devel python3-httpx python3-pyyaml \
   python3-typing-extensions
@@ -69,9 +69,15 @@ cd build/Linux/Release && sudo make install
 
 ## Install Python Wheel
 
+Create a virtual python environment  (or your on-host python libs will be clobbered)
+
 ```bash
+#The following will create the .venv under build/Linux/Release
+python3 -m venv .venv
+source .venv/bin/activate
 pip install build/Linux/Release/dist/onnxruntime*.whl --force-reinstall
 ```
+Run the python test script below inside the virtual environment.
 
 ## Test Installation
 
@@ -87,4 +93,10 @@ Both the MIGraphX- and the CPU execution providers should be listed.
 
 ```text
 Active provider: ['MIGraphXExecutionProvider', 'CPUExecutionProvider']
+```
+
+To deactivate the python virtual environment do:
+
+```bash
+deactivate
 ```
