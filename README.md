@@ -78,6 +78,11 @@ build_onnxruntime.sh
 ## Test
 
 ```bash
+  cd build/Linux/Release && make test
+```
+or
+
+```bash
 cd build/Linux/Release && ./onnxruntime_test_all
 ```
 
