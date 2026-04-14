@@ -44,6 +44,9 @@ fi
 # -----------------------------------------------------------------------------
 # Clean, Update and Build is done by the buid.sh script
 # -----------------------------------------------------------------------------
+echo "Cleaning op build subdirectory."
+rm -rf "${BUILD_DIR}"
+
 cd "${SOURCE_DIR}"
 
 echo "Running CMake configuration.."
@@ -60,6 +63,10 @@ if [ ! -d "$INSTALL_DIR" ]; then
 	echo "Error: Install directory not found at $INSTALL_DIR"
 	exit 1
 fi
+
+# Wait for the user to wake up
+echo "Install requires root priviledges."
+read -p "Press Enter to continue..."
 
 cd "${INSTALL_DIR}" && sudo make install
 
