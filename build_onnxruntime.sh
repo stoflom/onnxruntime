@@ -87,4 +87,7 @@ fi
 
 pip install "$WHEEL_FILE" --force-reinstall
 
+echo "Execution providers:"
+cd "${SCRIPT_DIR}" && python3 -c "import onnxruntime; print(onnxruntime.get_available_providers())"
+
 echo "Installed successfully."
