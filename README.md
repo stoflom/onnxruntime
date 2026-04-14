@@ -1,11 +1,14 @@
-# Building onnxruntime from source on my Linux fedora 43 setup.
-It appears that AMD GPU is only supported via AMDMigraphX which must be pre-installed.
+# Building onnxruntime from source on my Linux Fedora 43 setup
+
+It appears that AMD GPU is only supported via AMD MIGraphX which must be pre-installed.
 
 ## Building in Toolbox
+
 For building onnxruntime with AMD ROCm 7.2 on Fedora 43 using AMD supplied rpms in a toolbox, see [build-toolbox-fedora.md](./build-toolbox-fedora.md).
 
-## Linux fedora 43 (latest as of 2/4/2026)
-See: https://onnxruntime.ai/docs/build/
+## Linux Fedora 43 (latest as of 2/4/2026)
+
+See: [https://onnxruntime.ai/docs/build/](https://onnxruntime.ai/docs/build/)
 
 ## CLONING
 
@@ -15,6 +18,7 @@ git submodule update --init --recursive
 ```
 
 Before building install gmock-devel:
+
 ```bash
 sudo dnf install gmock-devel
 ```
@@ -22,12 +26,15 @@ sudo dnf install gmock-devel
 ## BUILD
 
 The build.sh command will by default update, build and test.
+
 To see all build options:
+
 ```bash
 ./build.sh --help
 ```
 
 ### BUILDING with migraphx prebuilt installed
+
 *Note: btop shows migraphx as built does not use the GPU, why? My migraphix build must be at a fault. Test execution time 44s.*
 
 ```bash
@@ -35,6 +42,7 @@ To see all build options:
 ```
 
 ### BUILDING without migraphx
+
 *Note: btop shows no GPU use, as expected. Test execution time 14508ms.*
 
 ```bash
@@ -42,6 +50,7 @@ To see all build options:
 ```
 
 ### Optimized Build (Gemini Suggestion)
+
 Note: `--use_openmp` is not recognized, but this works:
 
 ```bash
@@ -55,6 +64,7 @@ Note: `--use_openmp` is not recognized, but this works:
 ```
 
 For my tested build script use:
+
 ```bash
 build_onnxruntime.sh
 ```
@@ -68,6 +78,7 @@ cd build/Linux/Release && ./onnxruntime_test_all
 ## Install
 
 Installing to /usr/local:
+
 ```bash
 cd build/Linux/Release
 make install
@@ -86,7 +97,8 @@ cd ~
 python3 -c "import onnxruntime; print(onnxruntime.get_available_providers())"
 ```
 
-also verify with:
+Also verify with:
+
 ```bash
 onnx_test_runner --help
 ```
@@ -95,4 +107,5 @@ onnx_test_runner --help
 
 ```bash
 cd ~/Workspace/onnxruntime/onnxruntime
-# build, etc. as above. The build.sh script does --clean --update --build by default if no flags are given.
+# build, etc. as above. The build.sh script does --clean --update --build by default if no flags given.
+```
