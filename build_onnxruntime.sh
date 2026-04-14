@@ -70,7 +70,7 @@ read -p "Press Enter to continue..."
 
 cd "${INSTALL_DIR}" && sudo make install
 
-echo "Install wheel..."
+echo "Install wheel (locally)..."
 
 if [ ! -d "$WHEEL_DIR" ]; then
 	echo "Error: Wheel directory not found at $WHEEL_DIR"
