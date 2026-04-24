@@ -35,10 +35,10 @@ To see all build options:
 
 ### BUILDING with migraphx prebuilt installed
 
-*Note: btop shows migraphx as built does not use the GPU, why? My migraphix build must be at a fault. Test execution time 44s.*
+*Note: Fedora44 --- builds with migraphx with options below but provider test comes up with 3 errors*
 
 ```bash
-./build.sh --config Release --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync --use_migraphx
+./build.sh --config Release --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync --use_migraphx --migraphx_home "/usr/lib64"
 ```
 
 ### BUILDING without migraphx

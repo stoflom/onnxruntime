@@ -25,6 +25,8 @@ CMAKE_OPTIONS=(
 	--build_shared_lib
 	--enable_lto
 	--use_cache
+    --use_migraphx
+    --migraphx_home "/usr/lib64"
 	--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-c++20-compat"
 	--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
 	--compile_no_warning_as_error
