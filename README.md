@@ -103,6 +103,11 @@ Also verify with:
 onnx_test_runner --help
 ```
 
+Or run python test script
+```bash
+python test_run_onnx.py --default_dim_val 16 /home/stoflom/.local/share/darktable/models/denoise-nind/model.onnx
+```
+
 ## To update
 
 ```bash
