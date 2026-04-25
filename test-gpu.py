@@ -11,7 +11,7 @@ providers = [
 ]
 
 # Load your model (e.g., one used in your agentic workflow)
-model_path = "/home/stoflom/.local/share/darktable/models/denoise-nind/model.onnx"
+model_path = "onnxruntime/simplified_ssd.onnx"
 session = ort.InferenceSession(model_path, providers=providers)
 
 print(f"Active provider: {session.get_providers()}")
