@@ -11,7 +11,8 @@ providers = [
 ]
 
 # Load your model (e.g., one used in your agentic workflow)
-model_path = "onnxruntime/simplified_ssd.onnx"
+model_path = "onnxruntime/execution_provider_test_graph.onnx"
+
 session = ort.InferenceSession(model_path, providers=providers)
 
 print(f"Active provider: {session.get_providers()}")
