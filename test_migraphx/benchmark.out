@@ -1,0 +1,69 @@
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider migraphx --variant bayer --cache_dir kernels --size 1024
+MIGraphX parallel compilation enabled: 16 threads
+--- Testing BAYER variant on MIGRAPHX ---
+2026-05-02 15:39:32.784951865 [W:onnxruntime:Default, migraphx_execution_provider.cc:167 MIGraphXExecutionProvider] [MIGraphX EP] MIGraphX ENV Override Variables Set:
+Active Provider: MIGraphXExecutionProvider
+Input: input | Shape: (1, 4, 1024, 1024)
+Warmup/Compiling...
+Running 10 timed iterations...
+2026-05-02 15:39:35.652479635 [W:onnxruntime:Default, migraphx_execution_provider.cc:1253 calibrate_and_quantize] Quantizing input program to fp16
+2026-05-02 15:39:43.484505236 [W:onnxruntime:Default, migraphx_execution_provider.cc:1255 calibrate_and_quantize] Quantizing fp16: Complete
+2026-05-02 15:39:43.484526656 [W:onnxruntime:Default, migraphx_execution_provider.cc:1270 compile_program] Model Compile: Begin
+2026-05-02 15:48:46.704007777 [W:onnxruntime:Default, migraphx_execution_provider.cc:1275 compile_program] Model Compile: Complete
+
+Results for bayer (MIGraphXExecutionProvider):
+Average Inference Time:  55740.53 ms
+
+To compile the model took 9 minutes.
+
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider migraphx --variant bayer --cache_dir kernels --size 1024
+MIGraphX parallel compilation enabled: 16 threads
+--- Testing BAYER variant on MIGRAPHX ---
+2026-05-02 15:52:45.834229453 [W:onnxruntime:Default, migraphx_execution_provider.cc:167 MIGraphXExecutionProvider] [MIGraphX EP] MIGraphX ENV Override Variables Set:
+Active Provider: MIGraphXExecutionProvider
+Input: input | Shape: (1, 4, 1024, 1024)
+Warmup/Compiling...
+Running 10 timed iterations...
+
+Results for bayer (MIGraphXExecutionProvider):
+Average Inference Time:  419.57 ms
+
+With a precompiled kernel the execution time is 420 ms.
+
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider cpu --variant bayer  --size 1024
+--- Testing BAYER variant on CPU ---
+Active Provider: CPUExecutionProvider
+Input: input | Shape: (1, 4, 1024, 1024)
+Warmup/Compiling...
+Running 10 timed iterations...
+
+Results for bayer (CPUExecutionProvider):
+Average Inference Time:  2828.99 ms
+
+On the 16 cpu's the execution time is 2830 ms, about 6.7 times longer.
+
+
+For size = 512 migraphx is 10 times faster (precompiled):
+
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider cpu --variant bayer  --size 512
+--- Testing BAYER variant on CPU ---
+Active Provider: CPUExecutionProvider
+Input: input | Shape: (1, 4, 512, 512)
+Warmup/Compiling...
+Running 10 timed iterations...
+
+Results for bayer (CPUExecutionProvider):
+Average Inference Time:  809.51 ms
+
+
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider migraphx --variant bayer --cache_dir kernels --size 512
+MIGraphX parallel compilation enabled: 16 threads
+--- Testing BAYER variant on MIGRAPHX ---
+2026-05-02 16:00:52.559399445 [W:onnxruntime:Default, migraphx_execution_provider.cc:167 MIGraphXExecutionProvider] [MIGraphX EP] MIGraphX ENV Override Variables Set:
+Active Provider: MIGraphXExecutionProvider
+Input: input | Shape: (1, 4, 512, 512)
+Warmup/Compiling...
+Running 10 timed iterations...
+
+Results for bayer (MIGraphXExecutionProvider):
+Average Inference Time:  76.67 ms

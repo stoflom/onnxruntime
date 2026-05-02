@@ -1,2 +1,4 @@
 *.json
 *.onnx
+kernels/
+*.mxr

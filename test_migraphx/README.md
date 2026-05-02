@@ -8,8 +8,8 @@ This project provides models for raw and linear-RGB image denoising. It includes
 - **Bayer Variant**: Designed for Bayer-patterned raw sensor data.
 - **Linear Variant**: Designed for X-Trans, Foveon, or any already-demosaicked linear-RGB pipeline (Rec.2020 colorspace).
 
-**Author:** Benoit Brummer (UCLouvain)  
-**Paper:** [arXiv:2501.08924](https://arxiv.org/abs/2501.08924)  
+**Author:** Benoit Brummer (UCLouvain)
+**Paper:** [arXiv:2501.08924](https://arxiv.org/abs/2501.08924)
 **License:** GPL-3.0
 
 ## Files
@@ -50,47 +50,66 @@ python test_denoiser.py --provider migraphx --variant bayer
 python test_denoiser.py --provider migraphx --variant linear --size 1024
 ```
 
+**Test with kernel cache:**
+```bash
+python test_denoiser.py --provider migraphx --variant bayer --cache_dir kernels
+```
+Repeat the run, verify that the mxr file is not recompiled but loaded from the kernels subdirectory.
+
 ### Arguments
 
 | Argument | Choices | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `--provider` | `cpu`, `migraphx` | `cpu` | Execution provider to use. |
 | `--variant` | `linear`, `bayer` | `linear` | Model variant to test. |
-| `--size` | `int` | `512` | Input tile size (e.g., 256, 512, 1024). |
-| `--force-recompile` | | `False` | Force MIGraphX to recompile by removing existing cached kernels. |
+| `--size` | `int` | `512` | Input tile size (e.g., 512, 1024). |
+| `--cache_dir` | `str` | `None` | Directory for MIGraphX model caching. |
 
 ## Performance Optimization (MIGraphX)
 
-The `test_denoiser.py` script automatically applies several optimizations to speed up compilation and subsequent runs:
+The `test_denoiser.py` script automatically applies optimizations to speed up compilation:
 
 1.  **Parallel Compilation**: It automatically sets `MIGRAPHX_GPU_COMPILE_PARALLEL` to use all available CPU cores.
-2.  **Automatic Model Serialization**: It automatically saves compiled models to the `kernels/` directory and reloads them in subsequent runs to skip compilation entirely.
-
-You can force a fresh compilation at any time using the `--force-recompile` flag.
 
 ### Manual Optimization Methods
 
 If you wish to use other optimization methods manually, see below:
 
-#### 1. Using `MIGRAPHX_PROBLEM_CACHE` (Environment Variable)
-MIGraphX can store its kernel tuning results and compilation metadata in a persistent JSON file. This is highly effective for speeding up the tuning phase by reusing results from previous runs.
+#### 1. Using `MIGRAPHX_MODEL_CACHE_DIR` (Environment Variable)
+MIGraphX will store its compiled kernels in a mrx file in this location for future use. This avoids the lengthy compile step for future use of the model with similar parameters.
 
 Set the environment variable to a path of your choice:
 ```bash
-export MIGRAPHX_PROBLEM_CACHE="/path/to/your/migraphx_cache.json"
+export MIGRAPHX_MODEL_CACHE_DIR="/home/user/my_model_cache/"
 ```
+See also the similar python provider option below.
 
-#### 2. Custom Model Serialization (Python Options)
+#### 2. Provider Options
 If you are writing your own inference code, you can configure the `InferenceSession` as follows:
 ```python
 migraphx_options = {
     "device_id": 0,
-    "migraphx_save_model_path": "model_compiled.mxr",
-    "migraphx_load_model_path": "model_compiled.mxr",
-    "migraphx_fp16_enable": True
+    "migraphx_fp16_enable": True,
+    "migraphx_exhaustive_tune": True
 }
 session = ort.InferenceSession(model_path, providers=[("MIGraphXExecutionProvider", migraphx_options)])
 ```
+
+Available provider options:
+- `device_id`: GPU device ID (default: 0)
+- `migraphx_fp16_enable`: Enable FP16 precision
+- `migraphx_bf16_enable`: Enable BF16 precision
+- `migraphx_fp8_enable`: Enable FP8 precision
+- `migraphx_int8_enable`: Enable INT8 precision
+- `migraphx_int8_calibration_table_name`: Name for INT8 calibration table
+- `migraphx_int8_use_native_calibration_table`: Use native MIGraphX calibration table
+- `migraphx_exhaustive_tune`: Enable exhaustive kernel tuning
+- `migraphx_mem_limit`: Memory limit in bytes
+- `migraphx_arena_extend_strategy`: Strategy for arena extension (`kNextPowerOfTwo`, `kSameAsRequested`)
+- `migraphx_model_cache_dir`: Directory for model caching
+- `migraphx_external_alloc`: External memory allocation pointer
+- `migraphx_external_free`: External memory free pointer
+- `migraphx_external_empty_cache`: External empty cache pointer
 
 ### 3. Advanced Tuning (MIGraphX)
 
