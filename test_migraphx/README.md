@@ -14,8 +14,8 @@ This project provides models for raw and linear-RGB image denoising. It includes
 
 ## Files
 
-- `model_bayer.onnx`: Bayer variant model.
-- `model_linear.onnx`: Linear variant model.
+- [model_bayer.onnx](https://github.com/stoflom/onnxruntime/raw/main/test_migraphx/model_bayer.onnx): Bayer variant model.
+- [model_linear.onnx](https://github.com/stoflom/onnxruntime/raw/main/test_migraphx/model_linear.onnx): Linear variant model.
 - `test_denoiser.py`: Test script for evaluating inference performance and correctness.
 - `config.json`: Metadata and model attributes.
 
