@@ -57,20 +57,22 @@ python test_denoiser.py --provider migraphx --variant linear --size 1024
 | `--provider` | `cpu`, `migraphx` | `cpu` | Execution provider to use. |
 | `--variant` | `linear`, `bayer` | `linear` | Model variant to test. |
 | `--size` | `int` | `512` | Input tile size (e.g., 256, 512, 1024). |
+| `--force-recompile` | | `False` | Force MIGraphX to recompile by removing existing cached kernels. |
 
 ## Performance Optimization (MIGraphX)
 
-If you are using the MIGraphX execution provider, the initial compilation can be slow. You can optimize subsequent runs using the following methods:
+The `test_denoiser.py` script automatically applies several optimizations to speed up compilation and subsequent runs:
 
-### 1. Parallel Compilation
-Speed up the initial graph compilation by using multiple CPU cores:
-```bash
-export MIGRAPHX_GPU_COMPILE_PARALLEL=$(nproc)
-```
+1.  **Parallel Compilation**: It automatically sets `MIGRAPHX_GPU_COMPILE_PARALLEL` to use all available CPU cores.
+2.  **Automatic Model Serialization**: It automatically saves compiled models to the `kernels/` directory and reloads them in subsequent runs to skip compilation entirely.
 
-### 2. Persistent Compilation Cache
+You can force a fresh compilation at any time using the `--force-recompile` flag.
 
-#### Method A: Using `MIGRAPHX_PROBLEM_CACHE` (Environment Variable)
+### Manual Optimization Methods
+
+If you wish to use other optimization methods manually, see below:
+
+#### 1. Using `MIGRAPHX_PROBLEM_CACHE` (Environment Variable)
 MIGraphX can store its kernel tuning results and compilation metadata in a persistent JSON file. This is highly effective for speeding up the tuning phase by reusing results from previous runs.
 
 Set the environment variable to a path of your choice:
@@ -78,10 +80,8 @@ Set the environment variable to a path of your choice:
 export MIGRAPHX_PROBLEM_CACHE="/path/to/your/migraphx_cache.json"
 ```
 
-#### Method B: Model Serialization (Python Options)
-This method saves the entire optimized MIGraphX graph as a serialized binary file. This is often the fastest way to skip compilation entirely for a specific model.
-
-In your Python code, configure the `InferenceSession` as follows:
+#### 2. Custom Model Serialization (Python Options)
+If you are writing your own inference code, you can configure the `InferenceSession` as follows:
 ```python
 migraphx_options = {
     "device_id": 0,

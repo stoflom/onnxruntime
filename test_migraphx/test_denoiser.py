@@ -10,6 +10,7 @@ def run_test():
     parser.add_argument("--provider", choices=["cpu", "migraphx"], default="cpu", help="Execution provider to use.")
     parser.add_argument("--variant", choices=["linear", "bayer"], default="linear", help="Model variant to test.")
     parser.add_argument("--size", type=int, default=512, help="Input size (e.g., 256, 512, 1024).")
+    parser.add_argument("--force-recompile", action="store_true", help="Force MIGraphX to recompile the model by ignoring/removing cached kernels.")
     args = parser.parse_args()
 
     # 1. Map model files based on config.json
@@ -25,14 +26,38 @@ def run_test():
 
     # 2. Configure Execution Providers
     if args.provider == "migraphx":
-        # Using the specific string found in your environment
+        # Force parallel compilation using all available CPU cores
+        nproc = os.cpu_count() or 1
+        os.environ["MIGRAPHX_GPU_COMPILE_PARALLEL"] = str(nproc)
+        
+        kernel_dir = "kernels"
+        os.makedirs(kernel_dir, exist_ok=True)
+        compiled_model_path = os.path.join(kernel_dir, f"{args.variant}_{args.size}.mxr")
+
+        migraphx_options = {
+            'device_id': 0,
+            'migraphx_fp16_enable': True,
+        }
+
+        if args.force_recompile:
+            if os.path.exists(compiled_model_path):
+                print(f"Forcing recompile: removing {compiled_model_path}")
+                os.remove(compiled_model_path)
+        else:
+            if os.path.exists(compiled_model_path):
+                print(f"Loading compiled model from {compiled_model_path}")
+                migraphx_options['migraphx_load_model_path'] = compiled_model_path
+            else:
+                print(f"No compiled model found. Will save to {compiled_model_path}")
+        
+        # Always provide save path so it saves if it's a new compilation
+        migraphx_options['migraphx_save_model_path'] = compiled_model_path
+
         providers = [
-            ('MIGraphXExecutionProvider', {
-                'device_id': 0,
-                'migraphx_fp16_enable': True, 
-            }),
+            ('MIGraphXExecutionProvider', migraphx_options),
             'CPUExecutionProvider'
         ]
+        print(f"MIGraphX parallel compilation enabled: {nproc} threads")
     else:
         providers = ['CPUExecutionProvider']
 
