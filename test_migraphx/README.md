@@ -76,7 +76,7 @@ The `test_denoiser.py` script automatically applies optimizations to speed up co
 If you wish to use other optimization methods manually, see below:
 
 #### 1. Using `MIGRAPHX_MODEL_CACHE_DIR` (Environment Variable)
-MIGraphX will store its compiled kernels in a mrx file in this location for future use. This avoids the lengthy compile step for future use of the model with similar parameters.
+MIGraphX will store its compiled kernels in a mxr file in this location for future use. This avoids the lengthy compile step for future use of the model with similar parameters.
 
 Set the environment variable to a path of your choice:
 ```bash

@@ -67,3 +67,43 @@ Running 10 timed iterations...
 
 Results for bayer (MIGraphXExecutionProvider):
 Average Inference Time:  76.67 ms
+
+With linear model:
+
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider cpu --variant linear --cache_dir kernels --size 512
+--- Testing LINEAR variant on CPU ---
+Active Provider: CPUExecutionProvider
+Input: input | Shape: (1, 3, 512, 512)
+Warmup/Compiling...
+Running 10 timed iterations...
+
+Results for linear (CPUExecutionProvider):
+Average Inference Time:  197.97 ms
+
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider migraphx --variant linear --cache_dir kernels --size 512
+MIGraphX parallel compilation enabled: 16 threads
+--- Testing LINEAR variant on MIGRAPHX ---
+2026-05-02 16:10:08.143608420 [W:onnxruntime:Default, migraphx_execution_provider.cc:167 MIGraphXExecutionProvider] [MIGraphX EP] MIGraphX ENV Override Variables Set:
+Active Provider: MIGraphXExecutionProvider
+Input: input | Shape: (1, 3, 512, 512)
+Warmup/Compiling...
+2026-05-02 16:10:08.316336195 [W:onnxruntime:Default, migraphx_execution_provider.cc:1253 calibrate_and_quantize] Quantizing input program to fp16
+2026-05-02 16:10:09.826352614 [W:onnxruntime:Default, migraphx_execution_provider.cc:1255 calibrate_and_quantize] Quantizing fp16: Complete
+2026-05-02 16:10:09.826375556 [W:onnxruntime:Default, migraphx_execution_provider.cc:1270 compile_program] Model Compile: Begin
+2026-05-02 16:11:30.037140144 [W:onnxruntime:Default, migraphx_execution_provider.cc:1275 compile_program] Model Compile: Complete
+Running 10 timed iterations...
+
+Results for linear (MIGraphXExecutionProvider):
+Average Inference Time:  23.35 ms
+
+stoflom@fedora:~/Workspace/onnxruntime/test_migraphx$ python test_denoiser.py --provider migraphx --variant linear --cache_dir kernels --size 512
+MIGraphX parallel compilation enabled: 16 threads
+--- Testing LINEAR variant on MIGRAPHX ---
+2026-05-02 16:11:34.502433190 [W:onnxruntime:Default, migraphx_execution_provider.cc:167 MIGraphXExecutionProvider] [MIGraphX EP] MIGraphX ENV Override Variables Set:
+Active Provider: MIGraphXExecutionProvider
+Input: input | Shape: (1, 3, 512, 512)
+Warmup/Compiling...
+Running 10 timed iterations...
+
+Results for linear (MIGraphXExecutionProvider):
+Average Inference Time:  23.37 ms
