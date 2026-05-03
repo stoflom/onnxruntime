@@ -2,7 +2,7 @@
 
 # ==============================================================================
 # Script: build_onnxruntime.sh
-# Purpose: Build onnxruntime (on CPU only).
+# Purpose: Build onnxruntime (on CPU and MIGraphX) for Fedora 43.
 # Dependencies: Core dependencies are build as sub-modules
 # Usage: ./build_onnxruntime.sh
 # ==============================================================================
@@ -16,8 +16,7 @@ BUILD_DIR="${SOURCE_DIR}/build"
 INSTALL_DIR="${BUILD_DIR}/Linux/Release"
 WHEEL_DIR="${INSTALL_DIR}/dist"
 
-# CMake options (see ${SOURCE_DIR}/build.sh --help) (MIGRaphX not included,
-#   not supported yet on my AMD gfx1103)
+# CMake options (see ${SOURCE_DIR}/build.sh --help)
 CMAKE_OPTIONS=(
 	--config Release
 	--build_wheel
