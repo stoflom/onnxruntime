@@ -35,7 +35,7 @@ To see all build options:
 
 ### BUILDING with migraphx prebuilt installed
 
-*Note: Fedora44 --- builds with migraphx with options below but provider test comes up with 3 errors*
+*Note: Fedora44 --- builds with migraphx with options below but provider test comes up with errors, they do not seem to be critical.*
 
 ```bash
 ./build.sh --config Release --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync --use_migraphx --migraphx_home "/usr/lib64"
@@ -72,7 +72,7 @@ build_onnxruntime.sh
 ## Test
 
 ```bash
-cd build/Linux/Release && ./onnxruntime_test_all
+cd build/Linux/Release && make test
 ```
 
 ## Install
