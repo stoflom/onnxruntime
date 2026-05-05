@@ -13,8 +13,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 MAIN_DIR="$SCRIPT_DIR"
 SOURCE_DIR="${MAIN_DIR}/onnxruntime"
 BUILD_DIR="${SOURCE_DIR}/build"
-INSTALL_DIR="${BUILD_DIR}/Linux/Release"
-WHEEL_DIR="${INSTALL_DIR}/dist"
+BIN_DIR="${BUILD_DIR}/Linux/Release"
+WHEEL_DIR="${BIN_DIR}/dist"
 
 # CMake options (see ${SOURCE_DIR}/build.sh --help)
 CMAKE_OPTIONS=(
@@ -60,8 +60,8 @@ echo "Build completed successfully."
 # -----------------------------------------------------------------------------
 echo "Installing lib..."
 
-if [ ! -d "$INSTALL_DIR" ]; then
-	echo "Error: Install directory not found at $INSTALL_DIR"
+if [ ! -d "$BIN_DIR" ]; then
+	echo "Error: Install directory not found at $BIN_DIR"
 	exit 1
 fi
 
@@ -69,7 +69,7 @@ fi
 echo "Install requires root priviledges."
 read -p "Press Enter to continue..."
 
-cd "${INSTALL_DIR}" && sudo make install
+cd "${BIN_DIR}" && sudo make install
 
 echo "Install wheel (locally)..."
 
