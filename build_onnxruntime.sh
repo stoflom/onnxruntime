@@ -43,7 +43,7 @@ if [ ! -d "$SOURCE_DIR" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# Clean, Update and Build is done by the buid.sh script
+# Clean, Update and Build is done by the build.sh script
 # -----------------------------------------------------------------------------
 echo "Cleaning op build subdirectory."
 rm -rf "${BUILD_DIR}"
