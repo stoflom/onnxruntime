@@ -8,7 +8,7 @@ For building onnxruntime with AMD ROCm 7.2 on Fedora 43 using AMD supplied rpms 
 
 ## Linux Fedora 43 (latest as of 2/4/2026)
 
-See: [https://onnxruntime.ai/docs/build/](https://onnxruntime.ai/docs/build/)
+See: (https://onnxruntime.ai/docs/build/) and also (https://onnxruntime.ai/docs/execution-providers/MIGraphX-ExecutionProvider.html)
 
 ## CLONING
 
