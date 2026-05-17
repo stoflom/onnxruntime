@@ -11,6 +11,7 @@ def run_test():
     parser.add_argument("--variant", choices=["linear", "bayer"], default="linear", help="Model variant to test.")
     parser.add_argument("--size", type=int, default=512, help="Input size (e.g., 256, 512, 1024).")
     parser.add_argument("--cache_dir", type=str, help="Directory for MIGraphX model caching.")
+    parser.add_argument("--migraphx_fp16", action=argparse.BooleanOptionalAction, default=True, help="Enable MIGraphX FP16.")
     args = parser.parse_args()
 
     # 1. Map model files based on config.json
@@ -32,7 +33,7 @@ def run_test():
 
         migraphx_options = {
             'device_id': 0,
-            'migraphx_fp16_enable': True,
+            'migraphx_fp16_enable': args.migraphx_fp16,
         }
         if args.cache_dir:
             migraphx_options['migraphx_model_cache_dir'] = args.cache_dir
@@ -77,6 +78,11 @@ def run_test():
             latencies.append((time.time() - start) * 1000)
 
         print(f"\nResults for {args.variant} ({active}):")
+        if active == 'MIGraphXExecutionProvider':
+            options = session.get_provider_options()
+            migraphx_opts = options.get('MIGraphXExecutionProvider', {})
+            fp16_status = migraphx_opts.get('migraphx_fp16_enable', 'unknown')
+            print(f"MIGraphX FP16 enabled: {fp16_status}")
         print(f"Average Inference Time: {sum(latencies)/10: .2f} ms")
         
     except Exception as e:

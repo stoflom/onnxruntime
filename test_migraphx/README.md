@@ -56,6 +56,11 @@ python test_denoiser.py --provider migraphx --variant bayer --cache_dir kernels
 ```
 Repeat the run, verify that the mxr file is not recompiled but loaded from the kernels subdirectory.
 
+**Test with FP16 disabled on MIGraphX:**
+```bash
+python test_denoiser.py --provider migraphx --variant bayer --no-migraphx_fp16
+```
+
 ### Arguments
 
 | Argument | Choices | Default | Description |
@@ -64,6 +69,7 @@ Repeat the run, verify that the mxr file is not recompiled but loaded from the k
 | `--variant` | `linear`, `bayer` | `linear` | Model variant to test. |
 | `--size` | `int` | `512` | Input tile size (e.g., 512, 1024). |
 | `--cache_dir` | `str` | `None` | Directory for MIGraphX model caching. |
+| `--migraphx_fp16` | boolean | `True` | Enable MIGraphX FP16 (use `--no-migraphx_fp16` to disable). |
 
 ## Performance Optimization (MIGraphX)
 
