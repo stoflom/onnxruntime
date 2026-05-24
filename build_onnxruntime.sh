@@ -2,7 +2,7 @@
 
 # ==============================================================================
 # Script: build_onnxruntime.sh
-# Purpose: Build onnxruntime (on CPU and MIGraphX) for Fedora 43.
+# Purpose: Build onnxruntime (on CPU and MIGraphX) for Fedora 43/44.
 # Dependencies: Core dependencies are build as sub-modules
 # Usage: ./build_onnxruntime.sh
 # ==============================================================================
@@ -24,8 +24,8 @@ CMAKE_OPTIONS=(
 	--build_shared_lib
 	--enable_lto
 	--use_cache
-    --use_migraphx
-    --migraphx_home "/usr/lib64"
+	--use_migraphx
+	--migraphx_home "/usr/lib64"
 	--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-c++20-compat"
 	--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes"
 	--compile_no_warning_as_error
@@ -43,7 +43,7 @@ if [ ! -d "$SOURCE_DIR" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# Clean, Update and Build is done by the build.sh script
+# Clean, Update and Build is done by the build.sh script, but do force clean
 # -----------------------------------------------------------------------------
 echo "Cleaning op build subdirectory."
 rm -rf "${BUILD_DIR}"
@@ -51,7 +51,7 @@ rm -rf "${BUILD_DIR}"
 cd "${SOURCE_DIR}"
 
 echo "Running CMake configuration.."
-./build.sh   "${CMAKE_OPTIONS[@]}"
+./build.sh "${CMAKE_OPTIONS[@]}"
 
 echo "Build completed successfully."
 
