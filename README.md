@@ -108,6 +108,18 @@ Or run python test script from https://github.com/scxiao/ort_test/tree/master/py
 python test_run_onnx.py onnxruntime/simplified_ssd.onnx
 ```
 
+## Test Failures
+
+The provider test (`onnxruntime_provider_test`) may fail with 3 tests on newer GCC versions (e.g., GCC 16.x):
+
+- `Random.MultinomialGoodCase`
+- `Random.MultinomialDefaultDType`
+- `SamplingTest.Gpt2Sampling_CPU`
+
+**Reason:** The `Multinomial` tests hardcode expected output values that depend on the exact random number sequence produced by `std::default_random_engine`. Since `std::default_random_engine` is implementation-defined, different GCC versions generate different sequences. The hardcoded expectations were generated with an older GCC version. The `SamplingTest.Gpt2Sampling_CPU` failure is related — it uses the same RNG and expects deterministic output.
+
+These are false positives in the sense that the code logic is correct; only the test expectations need updating for the local compiler version.
+
 ## To update
 
 ```bash
