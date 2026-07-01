@@ -110,19 +110,33 @@ python test_run_onnx.py onnxruntime/simplified_ssd.onnx
 
 ## Test Failures
 
-The provider test (`onnxruntime_provider_test`) may fail with 3 tests on newer GCC versions (e.g., GCC 16.x):
+The `onnxruntime_test_all` and `onnxruntime_provider_test` may fail with these tests:
 
+- `QDQTransformerTests.DefaultPath_TagsGeneratedWeightWithStableContentIdentity`
 - `Random.MultinomialGoodCase`
 - `Random.MultinomialDefaultDType`
 - `SamplingTest.Gpt2Sampling_CPU`
 
-**Reason:** The `Multinomial` tests hardcode expected output values that depend on the exact random number sequence produced by `std::default_random_engine`. Since `std::default_random_engine` is implementation-defined, different GCC versions generate different sequences. The hardcoded expectations were generated with an older GCC version. The `SamplingTest.Gpt2Sampling_CPU` failure is related — it uses the same RNG and expects deterministic output.
+**QDQTransformer** (`qdq_matmulnbits_transformer_test.cc:1604`): The test generates a hash-based identity tag for a weight
+twice via different code paths and expects both tags to match. The hash value differs between runs due to C++ standard
+library hash randomization (ASLR / hash seed randomization). This is a test fragility issue — the two paths should
+produce the same identity but the hash function is not stable across executions.
 
-These are false positives in the sense that the code logic is correct; only the test expectations need updating for the local compiler version.
+**Multinomial & Sampling:** The `Multinomial` tests hardcode expected output values that depend on the exact random
+number sequence produced by `std::default_random_engine`. Since `std::default_random_engine` is implementation-defined,
+different GCC versions generate different sequences. The hardcoded expectations were generated with an older GCC version.
+The `SamplingTest.Gpt2Sampling_CPU` failure is related — it uses the same RNG and expects deterministic output.
 
-## To update
+These are false positives in the sense that the code logic is correct; only the test expectations need updating for the
+local compiler version and runtime environment.
+
+## To update (pull latest and rebuild)
 
 ```bash
 cd ~/Workspace/onnxruntime/onnxruntime
-# build, etc. as above. The build.sh script does --clean --update --build by default if no flags given.
+git pull
+git submodule update --init --recursive
+./build.sh --config Release --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync
+cd build/Linux/Release
+make test 2>&1 | tail -20
 ```
