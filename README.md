@@ -12,6 +12,8 @@ See: (https://onnxruntime.ai/docs/build/) and also (https://onnxruntime.ai/docs/
 
 ## CLONING
 
+`build_onnxruntime.sh` clones the repo automatically if `onnxruntime/` is missing, so manual cloning is optional. To clone manually:
+
 ```bash
 git clone https://github.com/Microsoft/onnxruntime.git
 git submodule update --init --recursive
@@ -68,6 +70,8 @@ For my tested build script use:
 ```bash
 build_onnxruntime.sh
 ```
+
+The script clones the repo if missing, force-syncs all submodules to the commits recorded by the root repo (and aborts if any diverge), builds the wheel and shared lib, installs under /usr/local (requires sudo), and pip-installs the wheel.
 
 ## Test
 
@@ -135,7 +139,7 @@ local compiler version and runtime environment.
 ```bash
 cd ~/Workspace/onnxruntime/onnxruntime
 git pull
-git submodule update --init --recursive
+git submodule update --init --recursive   # optional: build_onnxruntime.sh does this too
 ./build.sh --config Release --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync
 cd build/Linux/Release
 make test 2>&1 | tail -20

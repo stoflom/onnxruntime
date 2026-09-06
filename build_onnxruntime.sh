@@ -35,20 +35,41 @@ CMAKE_OPTIONS=(
 # -----------------------------------------------------------------------------
 # Check Dependencies
 # -----------------------------------------------------------------------------
-# Assumes onnxruntime is cloned in a subdirectory:
+# Assumes onnxruntime is cloned in a subdirectory; clone it if missing.
+ONNXRUNTIME_REPO="https://github.com/Microsoft/onnxruntime.git"
 
 if [ ! -d "$SOURCE_DIR" ]; then
-	echo "Error: Source directory not found at $SOURCE_DIR"
+	echo "Source directory not found at $SOURCE_DIR. Cloning $ONNXRUNTIME_REPO.."
+	git clone "$ONNXRUNTIME_REPO" "$SOURCE_DIR" || {
+		echo "Error: Failed to clone $ONNXRUNTIME_REPO"
+		exit 1
+	}
+fi
+
+cd "${SOURCE_DIR}"
+
+# -----------------------------------------------------------------------------
+# Ensure git submodules are initialized and pinned to the root repo versions
+# -----------------------------------------------------------------------------
+echo "Initializing/updating submodules.."
+git submodule update --init --recursive --force
+
+# Verify every submodule HEAD matches the commit recorded by the root repo.
+# Status line prefixes: ' ' = OK, '-' = uninitialized, '+' = different commit,
+# 'U' = merge conflict.
+SUBMODULE_STATUS="$(git submodule status)"
+if printf '%s\n' "$SUBMODULE_STATUS" | grep -qE "^[[:space:]]*[-+U]"; then
+	echo "Error: Submodule state does not match the root repo versions:"
+	printf '%s\n' "$SUBMODULE_STATUS"
 	exit 1
 fi
+echo "Submodules in sync with root repo."
 
 # -----------------------------------------------------------------------------
 # Clean, Update and Build is done by the build.sh script, but do force clean
 # -----------------------------------------------------------------------------
 echo "Cleaning op build subdirectory."
 rm -rf "${BUILD_DIR}"
-
-cd "${SOURCE_DIR}"
 
 echo "Running CMake configuration.."
 ./build.sh "${CMAKE_OPTIONS[@]}"
