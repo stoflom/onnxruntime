@@ -26,8 +26,8 @@ CMAKE_OPTIONS=(
 	--use_cache
 	--use_migraphx
 	--migraphx_home "/usr/lib64"
-	--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-c++20-compat -Wno-calloc-transposed-args"
-	--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-calloc-transposed-args"
+	--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-c++20-compat -Wno-calloc-transposed-args -Wno-stringop-overflow"
+	--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-calloc-transposed-args -Wno-stringop-overflow"
 	--compile_no_warning_as_error
 	--skip_tests
 )
