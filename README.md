@@ -112,9 +112,26 @@ onnx_test_runner --help
 ```
 
 Or run python test script from https://github.com/scxiao/ort_test/tree/master/python/run_onnx
+The `simplified_ssd.onnx` model moved in newer source trees; it is now at `onnxruntime/onnxruntime/test/testdata/multi_stream_models/simplified_ssd.onnx` (a copy is also produced at `onnxruntime/build/Linux/Release/simplified_ssd.onnx`):
+
 ```bash
-python test_run_onnx.py onnxruntime/simplified_ssd.onnx
+python test_run_onnx.py onnxruntime/onnxruntime/test/testdata/multi_stream_models/simplified_ssd.onnx
 ```
+
+Note: this script runs real inference on the GPU — make sure llama.cpp is not active (see [GPU provider smoke test](#gpu-provider-smoke-test-test-gpypy)).
+
+## GPU provider smoke test (`test-gpu.py`)
+
+`test-gpu.py` creates a MIGraphX session on `test_migraphx/model_linear.onnx` and prints the active providers. After the Fedora upgrade the wheel's Python user-site is wiped, so reinstall the Python-side deps if `import onnx` fails:
+
+```bash
+python3 -m pip install --user onnx ml_dtypes
+python3 test-gpu.py
+```
+
+Expected: `Active provider: ['MIGraphXExecutionProvider', 'CPUExecutionProvider']`.
+
+**Be careful running actual inference with `llama.cpp` active.** llama.cpp runs on the same AMD GPU; clashes (GPU memory / HSA contention) are not deterministic — a run can succeed or OOM/hang depending on what llama.cpp is doing at the moment. For reliable results stop the llama.cpp server first. (This also applies to `test_run_onnx.py`, which does run real inference.)
 
 ## Test Failures
 

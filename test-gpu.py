@@ -11,7 +11,7 @@ providers = [
 ]
 
 # Load your model (e.g., one used in your agentic workflow)
-model_path = "onnxruntime/execution_provider_test_graph.onnx"
+model_path = "test_migraphx/model_linear.onnx"
 
 session = ort.InferenceSession(model_path, providers=providers)
 
