@@ -39,6 +39,10 @@ To see all build options:
 
 *Note: Fedora44 --- builds with migraphx with options below but provider test comes up with errors, they do not seem to be critical.*
 
+*Note: after upgrading Fedora 44 to 45 (GCC 16.2.1, newer ROCm stack) `make test` got much worse --- test 7
+`onnxruntime_provider_test` started failing with SEGFAULT plus 3 deterministic RNG assertion failures. Both are fixed by
+the patch in `patches/` --- see [Patches](#patches) and [Test Failures](#test-failures) below.*
+
 ```bash
 ./build.sh --config Release --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync --use_migraphx --migraphx_home "/usr/lib64"
 ```
@@ -114,6 +118,33 @@ python test_run_onnx.py onnxruntime/simplified_ssd.onnx
 
 ## Test Failures
 
+### SEGFAULT in `onnxruntime_provider_test` (Fedora 44 to 45 upgrade)
+
+Symptom: ctest reports test 7 with a signal even though every gtest inside passed and the gtest XML was written:
+
+```
+The following tests FAILED:
+      7 - onnxruntime_provider_test (SEGFAULT)
+```
+
+Root cause: `s_library_migraphx` in `onnxruntime/core/session/provider_bridge_ort.cc` was the only GPU provider still
+declared with the default `unload = true`. At process exit `OrtEnv::~OrtEnv()` calls `UnloadSharedProviders()`, which
+`dlclose()`s `libonnxruntime_providers_migraphx.so` and its whole ROCm dependency tree (libmigraphx*, libamdhip64,
+libhsa-runtime64, MIOpen, rocBLAS, ...). Exit handlers / object teardown that run afterwards then call into code that
+has been unmapped and the process dies in `__run_exit_handlers`. This matches the historical pattern already handled
+for CUDA/CANN/TensorRT/VitisAI, which are all marked `false /* unload - On Linux if we unload the ... we crash */`
+(see issue #5384, PRs #5523/#5553/#24539 upstream).
+
+Diagnosis breadcrumbs: crash RIP is inside an *unmapped* region (gdb: `Cannot access memory`), and
+`LD_DEBUG=files,libs` shows `calling fini:` / `destroying link map:` for the migraphx/ROCm libraries immediately
+before the crash.
+
+Fix: pass `false` (no unload on Linux) for `s_library_migraphx` --- included in the patch under [Patches](#patches).
+This specific instance was not reported upstream at the time of writing (checked Oct 2026); only the general
+provider-unload crash class was.
+
+### `onnxruntime_test_all` / `onnxruntime_provider_test` assertion failures
+
 The `onnxruntime_test_all` and `onnxruntime_provider_test` may fail with these tests:
 
 - `QDQTransformerTests.DefaultPath_TagsGeneratedWeightWithStableContentIdentity`
@@ -126,13 +157,38 @@ twice via different code paths and expects both tags to match. The hash value di
 library hash randomization (ASLR / hash seed randomization). This is a test fragility issue — the two paths should
 produce the same identity but the hash function is not stable across executions.
 
-**Multinomial & Sampling:** The `Multinomial` tests hardcode expected output values that depend on the exact random
-number sequence produced by `std::default_random_engine`. Since `std::default_random_engine` is implementation-defined,
-different GCC versions generate different sequences. The hardcoded expectations were generated with an older GCC version.
-The `SamplingTest.Gpt2Sampling_CPU` failure is related — it uses the same RNG and expects deterministic output.
+**Multinomial & Sampling (appeared after the Fedora 44 to 45 upgrade):** The tests hardcode expected outputs
+generated from `std::default_random_engine` + `std::uniform_real_distribution`. The divergence is **not** in the
+engine: Fedora 45 ships GCC 16, and libstdc++ 16 replaced `std::generate_canonical` with a rewrite implementing
+P0952R2/LWG 2524 (GCC PR119739). Verified locally: GCC 13/14/15 all reproduce the recorded goldens bit-for-bit,
+GCC 16 does not (both g++ and clang++ with libstdc++ 16 headers). `SamplingTest.Gpt2Sampling_CPU` fails for the
+same reason --- it goes through `MultinomialComputeShared` with the same RNG.
 
-These are false positives in the sense that the code logic is correct; only the test expectations need updating for the
-local compiler version and runtime environment.
+Fix: define libstdc++'s documented compatibility macro `_GLIBCXX_USE_OLD_GENERATE_CANONICAL` for non-MSVC builds
+(global compile definition in `cmake/CMakeLists.txt`), pinning random-op outputs to the historical algorithm on
+GCC 16+ instead of regenerating goldens per toolchain. Included in the patch under [Patches](#patches); the three
+tests pass afterwards. Note that downstream packagers (Gentoo) were skipping these tests instead
+(Gentoo bug 975584, forwarded upstream as onnxruntime issue #28664, which was closed for an unrelated protobuf ABI
+problem --- the RNG failures were never fixed upstream).
+
+## Patches
+
+Local fixes that are not (yet) upstream are kept in [`../patches/`](../patches/) and mirrored on the local branch
+`dev/fix-migraphx-provider-unload-segfault` in `onnxruntime/`:
+
+| Patch | Fixes | Upstream status (checked Oct 2026) |
+|---|---|---|
+| `0001-fix-migraphx-provider-unload-segfault-and-gcc16-generate-canonical.patch` | (1) `onnxruntime_provider_test` SEGFAULT at exit: MIGraphX shared provider was `dlclose`d on Linux while CUDA/CANN/TRT/VitisAI are not; (2) `Random.MultinomialGoodCase`, `Random.MultinomialDefaultDType`, `SamplingTest.Gpt2Sampling_CPU` failing on GCC 16 (libstdc++ 16 new `std::generate_canonical`, P0952R2) | (1) not reported upstream; (2) known to packagers (Gentoo skips the tests), not fixed upstream |
+
+To apply after a fresh clone / `git pull` that does not contain the fixes:
+
+```bash
+cd onnxruntime
+git am ../patches/0001-fix-migraphx-provider-unload-segfault-and-gcc16-generate-canonical.patch
+```
+
+Re-check the applied state with `git log --oneline -3` (should show the `[ROCM] Do not unload the MIGraphX shared
+provider on Linux` and `[cmake] Pin libstdc++ generate_canonical to the pre-GCC 16 algorithm` commits).
 
 ## To update (pull latest and rebuild)
 

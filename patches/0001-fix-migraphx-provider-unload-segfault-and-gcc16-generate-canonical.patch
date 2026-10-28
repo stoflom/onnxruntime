@@ -1,0 +1,100 @@
+From 5adc80e6897459d708a91c050afde195a3dddc30 Mon Sep 17 00:00:00 2001
+From: Christoffel Lombard <stoflom@gmail.com>
+Date: Wed, 28 Oct 2026 17:44:31 +0200
+Subject: [PATCH 1/2] [ROCM] Do not unload the MIGraphX shared provider on
+ Linux
+
+Unloading libonnxruntime_providers_migraphx.so at ~OrtEnv runs the fini
+routines of the whole ROCm dependency tree (libmigraphx, libamdhip64,
+libhsa-runtime64, MIOpen, ...). Exit handlers and object teardown that
+run afterwards then jump into unmapped memory and segfault the process
+(ctest reported onnxruntime_provider_test as SEGFAULT after all gtests
+had completed).
+
+Mark s_library_migraphx with unload = false on non-Windows, matching
+the existing treatment of the CUDA, CANN, TensorRT and VitisAI shared
+providers, which are likewise never unloaded on Linux because doing so
+crashes.
+---
+ onnxruntime/core/session/provider_bridge_ort.cc | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/onnxruntime/core/session/provider_bridge_ort.cc b/onnxruntime/core/session/provider_bridge_ort.cc
+index 3a9a6f4c7e..5a53b6296f 100644
+--- a/onnxruntime/core/session/provider_bridge_ort.cc
++++ b/onnxruntime/core/session/provider_bridge_ort.cc
+@@ -2124,7 +2124,21 @@ static ProviderLibrary s_library_tensorrt(LIBRARY_PREFIX ORT_TSTR("onnxruntime_p
+                                           false
+ #endif
+ );
+-static ProviderLibrary s_library_migraphx(LIBRARY_PREFIX ORT_TSTR("onnxruntime_providers_migraphx") LIBRARY_EXTENSION);
++static ProviderLibrary s_library_migraphx(LIBRARY_PREFIX ORT_TSTR("onnxruntime_providers_migraphx") LIBRARY_EXTENSION
++#ifndef _WIN32
++                                          ,
++                                          /*
++                                           * unload - On Linux if we unload the migraphx shared provider we crash.
++                                           *
++                                           * Unloading runs the fini routines of the whole ROCm dependency tree
++                                           * (libmigraphx, libamdhip64, libhsa-runtime64, MIOpen, ...) during
++                                           * ~OrtEnv. Any exit handler or object teardown that afterwards touches
++                                           * code or vtables in the unloaded libraries then jumps into unmapped
++                                           * memory and segfaults the process.
++                                           */
++                                          false
++#endif
++);
+ 
+ // QNN EP can be built either as a static library or a shared library. Can safely define s_library_qnn even if static.
+ static ProviderLibrary s_library_qnn(LIBRARY_PREFIX ORT_TSTR("onnxruntime_providers_qnn") LIBRARY_EXTENSION);
+-- 
+2.55.0
+
+
+From a9d3e029b126d697f363c5d44ad7a04b1368bcf5 Mon Sep 17 00:00:00 2001
+From: Christoffel Lombard <stoflom@gmail.com>
+Date: Wed, 28 Oct 2026 18:12:00 +0200
+Subject: [PATCH 2/2] [cmake] Pin libstdc++ generate_canonical to the pre-GCC
+ 16 algorithm
+
+GCC 16's libstdc++ implements P0952R2/LWG 2524 with a rewritten
+std::generate_canonical that returns different values than every
+earlier libstdc++. Random-op kernels (Multinomial, Sampling,
+RandomNormal/Uniform) inline std::uniform_real_distribution over it,
+so random op outputs and the recorded unit test expectations silently
+changed with the toolchain, failing Random.MultinomialGoodCase,
+Random.MultinomialDefaultDType and SamplingTest.Gpt2Sampling_CPU on
+GCC 16 builds.
+
+Define _GLIBCXX_USE_OLD_GENERATE_CANONICAL (libstdc++'s documented
+compatibility macro) for non-MSVC builds to keep random op results
+stable across toolchains. The macro is inert with libstdc++ older
+than 16, with libc++ and with the MSVC STL.
+---
+ cmake/CMakeLists.txt | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
+index 387b0fef74..2e80004966 100644
+--- a/cmake/CMakeLists.txt
++++ b/cmake/CMakeLists.txt
+@@ -48,6 +48,17 @@ if (MSVC)
+   set(CMAKE_PCH_PROLOGUE "")
+ endif()
+ 
++if (NOT MSVC)
++  # libstdc++ 16 (GCC 16) implements P0952R2/LWG 2524 with a rewritten std::generate_canonical
++  # that produces different values than every earlier libstdc++. Random-op kernels (Multinomial,
++  # Sampling, RandomNormal/Uniform) inline std::uniform_real_distribution over it, so the outputs
++  # of random ops and the recorded unit test expectations would silently change with the
++  # toolchain. Opt into the old algorithm via libstdc++'s documented compatibility macro to keep
++  # random-op results stable across toolchains. The macro is inert with libstdc++ older than 16,
++  # with libc++ and with the MSVC STL.
++  add_compile_definitions(_GLIBCXX_USE_OLD_GENERATE_CANONICAL)
++endif()
++
+ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+ # NOTE: POSITION INDEPENDENT CODE hurts performance, and it only make sense on POSIX systems
+ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+-- 
+2.55.0
+
