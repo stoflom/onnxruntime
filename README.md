@@ -187,6 +187,11 @@ cd onnxruntime
 git am ../patches/0001-fix-migraphx-provider-unload-segfault-and-gcc16-generate-canonical.patch
 ```
 
+`build_onnxruntime.sh` does this automatically before building: it checks whether the patches are already applied
+(`git apply --reverse --check`) and, if not, checks out / creates the `dev/local-patches` branch and
+`git am --3way`s whatever is missing. The onnxruntime clone itself keeps tracking upstream `main`; the patches and
+this README in the outer repo are the source of truth for local fixes.
+
 Re-check the applied state with `git log --oneline -3` (should show the `[ROCM] Do not unload the MIGraphX shared
 provider on Linux` and `[cmake] Pin libstdc++ generate_canonical to the pre-GCC 16 algorithm` commits).
 

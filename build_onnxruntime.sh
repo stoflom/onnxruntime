@@ -2,7 +2,7 @@
 
 # ==============================================================================
 # Script: build_onnxruntime.sh
-# Purpose: Build onnxruntime (on CPU and MIGraphX) for Fedora 43/44.
+# Purpose: Build onnxruntime (on CPU and MIGraphX) for Fedora 43/44/45
 # Dependencies: Core dependencies are build as sub-modules
 # Usage: ./build_onnxruntime.sh
 # ==============================================================================
@@ -26,8 +26,8 @@ CMAKE_OPTIONS=(
 	--use_cache
 	--use_migraphx
 	--migraphx_home "/usr/lib64"
-	--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-c++20-compat -Wno-calloc-transposed-args -Wno-stringop-overflow"
-	--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-calloc-transposed-args -Wno-stringop-overflow"
+#	--cmake_extra_defines "CMAKE_CXX_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-c++20-compat -Wno-calloc-transposed-args #-Wno-stringop-overflow"
+#	--cmake_extra_defines "CMAKE_C_FLAGS=-march=native -O3 -flto -Wno-unused-parameter -Wno-ignored-attributes -Wno-calloc-transposed-args #-Wno-stringop-overflow"
 	--compile_no_warning_as_error
 	--skip_tests
 )
@@ -64,6 +64,60 @@ if printf '%s\n' "$SUBMODULE_STATUS" | grep -qE "^[[:space:]]*[-+U]"; then
 	exit 1
 fi
 echo "Submodules in sync with root repo."
+
+# -----------------------------------------------------------------------------
+# Apply local patches from ../patches on a dedicated dev branch
+# -----------------------------------------------------------------------------
+# The onnxruntime clone normally tracks upstream main, so local fixes live as
+# patches in the outer workspace repo (see ../README.md). Before building we
+# check whether they are already applied; if not, we check out (or create) a
+# dev branch and `git am` whatever is missing. Applied patches are left alone
+# on whatever branch the checkout already sits on.
+PATCH_BRANCH="dev/local-patches"
+PATCH_FILES=()
+for p in "$SCRIPT_DIR"/patches/*.patch; do
+	[ -e "$p" ] && PATCH_FILES+=("$p")
+done
+
+# Fills PENDING_PATCHES with patches that are not yet reverse-appliable
+# (i.e. not yet applied) in the current checkout.
+PENDING_PATCHES=()
+collect_pending_patches() {
+	PENDING_PATCHES=()
+	local p
+	for p in "${PATCH_FILES[@]}"; do
+		git apply --reverse --check "$p" >/dev/null 2>&1 || PENDING_PATCHES+=("$p")
+	done
+}
+
+if [ "${#PATCH_FILES[@]}" -eq 0 ]; then
+	echo "No patches found in $SCRIPT_DIR/patches - building unpatched."
+else
+	collect_pending_patches
+	if [ "${#PENDING_PATCHES[@]}" -gt 0 ]; then
+		if git show-ref --verify --quiet "refs/heads/$PATCH_BRANCH"; then
+			if [ "$(git branch --show-current)" != "$PATCH_BRANCH" ]; then
+				echo "Switching to branch $PATCH_BRANCH.."
+				git switch "$PATCH_BRANCH"
+			fi
+			collect_pending_patches
+		else
+			echo "Creating branch $PATCH_BRANCH.."
+			git switch -c "$PATCH_BRANCH"
+		fi
+		if [ "${#PENDING_PATCHES[@]}" -gt 0 ]; then
+			echo "Applying local patches:"
+			for p in "${PENDING_PATCHES[@]}"; do echo "  - ${p##*/}"; done
+			if ! git am --3way "${PENDING_PATCHES[@]}"; then
+				git am --abort || true
+				echo "Error: git am failed for one of the patches above."
+				echo "The patches in $SCRIPT_DIR/patches may need rebasing against upstream main."
+				exit 1
+			fi
+		fi
+	fi
+	echo "Local patches applied (branch: $(git branch --show-current))."
+fi
 
 # -----------------------------------------------------------------------------
 # Clean, Update and Build is done by the build.sh script, but do force clean
